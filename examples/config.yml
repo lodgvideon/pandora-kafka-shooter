@@ -1,0 +1,30 @@
+pools:
+  - gun:
+      type: pandora_kafka_shooter
+      KafkaBrokers: 'localhost:9094'
+      RequiredAcks: -1
+      Balancer: sarama
+      Headers:
+        - Key: TEMP_HEADER
+          Value: TEMP_VALUE
+        - Key: TEMP_HEADER_2
+          Value: TEMP_VALUE_2
+    ammo:
+      type: kafka_provider
+      source:
+        path: './examples/ammo.txt'
+        type: file
+    result:
+      type: phout
+      destination: ./http_phout.log
+    rps-per-instance: true
+    rps:
+      type: line
+      from: 100
+      to: 100
+      duration: 30s
+    startup:
+      type: once
+      times: 100
+log:
+  level: debug
