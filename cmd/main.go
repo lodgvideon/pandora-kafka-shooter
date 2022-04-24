@@ -6,6 +6,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/segmentio/kafka-go"
 	"github.com/segmentio/kafka-go/protocol"
 	"github.com/spf13/afero"
@@ -28,22 +29,22 @@ type Ammo struct {
 }
 
 type GunConfig struct {
-	KafkaBrokers           string `validate:"required" json:"kafka_brokers"` // localhost:9094,localhost:9094, will fail, without target defined
-	Compression            int
-	BatchSize              int
-	MaxAttempts            int
-	BatchBytes             int64
-	BatchTimeout           string
-	Balancer               string
-	WriteTimeout           string
-	Async                  bool
-	AllowAutoTopicCreation bool
-	RequiredAcks           int            `validate:"required"`
-	Headers                []HeaderConfig `validate:"required"` // Configuration will fail, without target defined // 1048576
+	KafkaBrokers           string         `validate:"required" config:"kafka_brokers"` // localhost:9094,localhost:9094, will fail, without target defined
+	Compression            int            `config:"compression"`                       //None= 0, Gzip = 1,Snappy = 2,Lz4= 3,Zstd = 4
+	BatchSize              int            `config:"batch_size"`                        //default=100
+	MaxAttempts            int            `config:"max_attempts"`                      // default=10
+	BatchBytes             int64          `config:"batch_bytes"`                       //default 1048576
+	BatchTimeout           string         `config:"batch_timeout"`                     //1s
+	Balancer               string         `config:"balancer"`                          // default: sarama
+	WriteTimeout           string         `config:"write_timeout"`                     //default: 10s
+	Async                  bool           `config:"async"`                             //default: false
+	AllowAutoTopicCreation bool           `config:"allow_topic_autocreation"`          //default:false
+	RequiredAcks           int            `config:"required_acks" validate:"required"` //RequireNone = 0	RequireOne  = 1 RequireAll = -1
+	Headers                []HeaderConfig `config:"headers"`                           // Additional headers for each message
 }
 type HeaderConfig struct {
-	Key   string `validate:"required"`
-	Value string `validate:"required"`
+	Key   string `validate:"required" config:"key"`
+	Value string `validate:"required" config:"value"`
 }
 
 type Gun struct {
@@ -110,11 +111,13 @@ func (g *Gun) Bind(aggr core.Aggregator, deps core.GunDeps) error {
 	g.GunDeps = deps
 	return nil
 }
-func (g *Gun) logf(msg string, a ...interface{}) {
-	g.Log.Info(msg)
+func (g *Gun) logf(msg string, params ...interface{}) {
+	sprintf := fmt.Sprintf(msg, params...)
+	g.Log.Debug(sprintf)
 }
-func (g *Gun) logError(msg string, a ...interface{}) {
-	g.Log.Error(msg)
+
+func (g *Gun) logError(msg string, params ...interface{}) {
+	g.Log.Error(fmt.Sprintf(msg, params...))
 }
 
 func (g *Gun) Shoot(ammo core.Ammo) {
@@ -168,6 +171,7 @@ func main() {
 			BatchTimeout:           "1s",
 			WriteTimeout:           "10s",
 			Balancer:               "sarama",
+			RequiredAcks:           -1, //requred all acks
 			Async:                  false,
 			AllowAutoTopicCreation: false,
 			Headers:                []HeaderConfig{},
