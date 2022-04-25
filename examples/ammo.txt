@@ -1,1 +1,2 @@
-{"topic":"kafka_shoot", "key":"1234", "tag":"SPARTA_1", "message":"This is Sparta!!!"}
+{"topic":"kafka_shoot", "key":"1234", "tag":"SPARTA_1", "message": {"a":[{"v":1,"d":"s"},{"v":1,"d":"fff"}]}}
+{"topic":"kafka_shoot", "key":"eee", "tag":"SPARTA_2", "message": {"d":"ss"}}

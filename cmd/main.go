@@ -6,6 +6,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/segmentio/kafka-go"
 	"github.com/segmentio/kafka-go/protocol"
@@ -22,10 +23,10 @@ import (
 )
 
 type Ammo struct {
-	Topic   string `json:"topic,omitempty"`
-	Key     string `json:"key,omitempty"`
-	Tag     string `json:"tag,omitempty"`
-	Message string `json:"message,omitempty"`
+	Topic   string          `json:"topic,omitempty"`
+	Key     string          `json:"key,omitempty"`
+	Tag     string          `json:"tag,omitempty"`
+	Message json.RawMessage `json:"message,omitempty"`
 }
 
 type GunConfig struct {
