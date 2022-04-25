@@ -23,10 +23,11 @@ import (
 )
 
 type Ammo struct {
-	Topic   string          `json:"topic,omitempty"`
-	Key     string          `json:"key,omitempty"`
-	Tag     string          `json:"tag,omitempty"`
-	Message json.RawMessage `json:"message,omitempty"`
+	Topic   string            `json:"topic,omitempty"`
+	Key     string            `json:"key,omitempty"`
+	Tag     string            `json:"tag,omitempty"`
+	Headers map[string]string `json:"headers"`
+	Message json.RawMessage   `json:"message,omitempty"`
 }
 
 type GunConfig struct {
@@ -41,6 +42,7 @@ type GunConfig struct {
 	Async                  bool           `config:"async"`                             //default: false
 	AllowAutoTopicCreation bool           `config:"allow_topic_autocreation"`          //default:false
 	RequiredAcks           int            `config:"required_acks" validate:"required"` //RequireNone = 0	RequireOne  = 1 RequireAll = -1
+	Consistent             bool           `config:"consistent"`                        //Enable consistent mode for load balancers: CRC32Balancer , murmur2Balancer  Default: False
 	Headers                []HeaderConfig `config:"headers"`                           // Additional headers for each message
 }
 type HeaderConfig struct {
@@ -60,6 +62,14 @@ type Gun struct {
 
 func NewGun(conf GunConfig) *Gun {
 	return &Gun{conf: conf}
+}
+
+func (g *Gun) Close() error {
+	err := g.client.Close()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (g *Gun) Bind(aggr core.Aggregator, deps core.GunDeps) error {
@@ -83,11 +93,11 @@ func (g *Gun) Bind(aggr core.Aggregator, deps core.GunDeps) error {
 	case "roundrobin":
 		balancer = &kafka.RoundRobin{}
 	case "crc32":
-		balancer = &kafka.CRC32Balancer{}
+		balancer = &kafka.CRC32Balancer{Consistent: g.conf.Consistent}
 	case "sarama":
 		balancer = &kafka.Hash{}
 	case "murmur2":
-		balancer = &kafka.Murmur2Balancer{}
+		balancer = &kafka.Murmur2Balancer{Consistent: g.conf.Consistent}
 	case "leastbytes":
 		balancer = &kafka.LeastBytes{}
 	}
@@ -138,6 +148,10 @@ func (g *Gun) shoot(ammo *Ammo) {
 		headers = append(headers, protocol.Header{Key: header.Key, Value: []byte(header.Value)})
 	}
 
+	for key, value := range ammo.Headers {
+		headers = append(headers, protocol.Header{Key: key, Value: []byte(value)})
+	}
+
 	err := g.client.WriteMessages(context.Background(),
 		kafka.Message{
 			Topic: ammo.Topic,
@@ -174,6 +188,7 @@ func main() {
 			Balancer:               "sarama",
 			RequiredAcks:           -1, //requred all acks
 			Async:                  false,
+			Consistent:             false,
 			AllowAutoTopicCreation: false,
 			Headers:                []HeaderConfig{},
 		}

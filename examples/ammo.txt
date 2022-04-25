@@ -1,2 +1,2 @@
-{"topic":"kafka_shoot", "key":"1234", "tag":"SPARTA_1", "message": {"a":[{"v":1,"d":"s"},{"v":1,"d":"fff"}]}}
-{"topic":"kafka_shoot", "key":"eee", "tag":"SPARTA_2", "message": {"d":"ss"}}
+{"topic":"kafka_shoot", "key":"1234", "tag":"SPARTA_1", "headers": {"ammo_header":"ammo_value", "ammo_header2":"ammo_value2"}, "message": {"a":[{"v":1,"d":"s"},{"v":1,"d":"fff"}]}}
+{"topic":"kafka_shoot", "key":"333", "tag":"SPARTA_2", "headers": {"ammo_header":"ammo_value", "ammo_header3":"ammo_value4"}, "message": {"d":"ss"}}
