@@ -1,0 +1,18 @@
+version: '3.5'
+services:
+  clickhouse:
+    image: yandex/clickhouse-server:latest
+    platform: linux/amd64
+    container_name: clickhouse
+    expose:
+      - 8123
+      - 9000
+    ports:
+      - 8123:8123
+      - 9000:9000
+    volumes:
+#      - ${PWD}/clickhouse/configs:/etc/clickhouse-server
+      - ${PWD}/clickhouse/configs/config.xml:/etc/clickhouse-server/config.xml
+      - ${PWD}/clickhouse/configs/users.xml:/etc/clickhouse-server/users.xml
+      - ${PWD}/clickhouse/log:/var/log/clickhouse-server
+      - ${PWD}/clickhouse/data:/var/lib/clickhouse

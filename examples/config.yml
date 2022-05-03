@@ -1,24 +1,25 @@
 pools:
   - gun:
       type: pandora_kafka_shooter
-#      broker_1:9094,broker_2:9094,broker_3:9094
-      kafka_brokers: 'localhost:9094'
-#      RequireNone = 0	RequireOne  = 1 RequireAll = -1 default: -1
-      required_acks: -1
-#      None= 0, Gzip = 1,Snappy = 2,Lz4= 3,Zstd = 4  default: 0
-      compression: 0
-#      default: 100
-      batch_size: 100
-#      roundrobin, sarama, crc32, murmur2, leastbytes default:sarama
-      balancer: sarama
-#      default: 10
-      max_attempts: 10
-#      default: 10s
-      write_timeout: 10s
-#      default: False
-      async: False
-#      allow_topic_autocreation - allow producer to create topic default: False
-      allow_topic_autocreation: False
+      kafka_config:
+  #      broker_1:9094,broker_2:9094,broker_3:9094
+        kafka_brokers: 'localhost:9094'
+  #      RequireNone = 0	RequireOne  = 1 RequireAll = -1 default: -1
+        required_acks: -1
+  #      None= 0, Gzip = 1,Snappy = 2,Lz4= 3,Zstd = 4  default: 0
+        compression: 0
+  #      default: 100
+        batch_size: 100
+  #      roundrobin, sarama, crc32, murmur2, leastbytes default:sarama
+        balancer: sarama
+  #      default: 10
+        max_attempts: 10
+  #      default: 10s
+        write_timeout: 10s
+  #      default: False
+        async: False
+  #      allow_topic_autocreation - allow producer to create topic default: False
+        allow_topic_autocreation: False
       headers:
         - {key: "TEMP_HEADER", value: "TEMP_VALUE"}
         - {key: "TEMP_HEADER_2", Value: "TEMP_VALUE_2"}
@@ -28,9 +29,24 @@ pools:
         path: './examples/ammo.txt'
         type: file
     result:
-      type: phout
-      destination: ./http_phout.log
-    rps-per-instance: true
+#      type: phout
+#      destination: ./http_phout.log
+      type: clickhouse
+      address: localhost:9000
+      database: default
+      username: default
+      password: default
+      batch_size: 100
+      max_connections: 10
+      max_iddle: 5
+      conn_lifetime: 1h
+      profile: "example"
+      run_id: "temp_run"
+      hostname: "localhost"
+#      sample-queue-size: 1000000
+
+
+    rps-per-instance: false
     rps:
       type: line
       from: 100
