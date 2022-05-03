@@ -19,7 +19,7 @@ pools:
   #      default: False
         async: False
   #      allow_topic_autocreation - allow producer to create topic default: False
-        allow_topic_autocreation: False
+        allow_topic_autocreation: True
       headers:
         - {key: "TEMP_HEADER", value: "TEMP_VALUE"}
         - {key: "TEMP_HEADER_2", Value: "TEMP_VALUE_2"}
@@ -36,7 +36,7 @@ pools:
       database: default
       username: default
       password: default
-      batch_size: 100
+      batch_size: 10000
       max_connections: 10
       max_iddle: 5
       conn_lifetime: 1h
@@ -56,4 +56,4 @@ pools:
       type: once
       times: 100
 log:
-  level: debug
+  level: info

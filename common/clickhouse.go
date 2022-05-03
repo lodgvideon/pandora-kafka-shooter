@@ -43,8 +43,6 @@ func NewClickhouseAggregator(clickhouseConfig ClickhouseConfig) *ClickhouseAggre
 		Debug: true,
 	})
 	batch, err := conn.PrepareBatch(context.Background(), "INSERT INTO pandora_results.pandora_results")
-	err = conn.Ping(context.Background())
-
 	if err != nil {
 		log.Panic("Unable to create Clickhouse Connection")
 
@@ -67,17 +65,27 @@ HandleLoop:
 			break HandleLoop // Still need to handle all queued samples.
 		}
 	}
+	if c.currentSize > 0 {
+		err := c.batch.Send()
+		if err != nil {
+			log.Println("Error during final Batch", err)
+		}
+	}
 	return
+}
+func (c *ClickhouseAggregator) getBatch(ctx context.Context) (driver.Batch, error) {
+	batch, err := c.Conn.PrepareBatch(ctx, "INSERT INTO pandora_results.pandora_results")
+	if err != nil {
+		log.Print("Error during creating batch", err)
+	}
+	return batch, err
 }
 
 func (c *ClickhouseAggregator) handleSample(sample core.Sample) (err error) {
 	ctx := context.Background()
 
 	if c.batch == nil {
-		batch, err := c.Conn.PrepareBatch(ctx, "INSERT INTO pandora_results.pandora_results")
-		if err != nil {
-			log.Panic("Error during creating batch", err)
-		}
+		batch, _ := c.getBatch(ctx)
 		c.batch = batch
 	}
 	var errorCount = 0
@@ -87,6 +95,12 @@ func (c *ClickhouseAggregator) handleSample(sample core.Sample) (err error) {
 	}
 
 	tags := s.Tags()
+	error := ""
+	if s.Err() != nil {
+		error = s.Err().Error()
+
+	}
+
 	err = c.batch.Append(
 		s.timeStamp,
 		uint64(s.timeStamp.UnixMilli()),
@@ -98,7 +112,7 @@ func (c *ClickhouseAggregator) handleSample(sample core.Sample) (err error) {
 		uint64(errorCount),
 		float64(s.GetDuration()),
 		strconv.Itoa(s.ProtoCode()),
-		s.Err().Error(),
+		error,
 	)
 	if err != nil {
 		log.Panic("Error during appending to Batch")
